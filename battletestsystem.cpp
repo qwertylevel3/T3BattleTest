@@ -12,7 +12,7 @@ using namespace std;
 
 BattleTestSystem::BattleTestSystem()
 {
-
+    showMessage=false;
 }
 
 void BattleTestSystem::init()
@@ -24,7 +24,17 @@ void BattleTestSystem::init()
 
 void BattleTestSystem::test()
 {
-    battle(characterA,characterB);
+    AWinCount=0;
+    BWinCount=0;
+    for(int i=0;i<100;i++)
+    {
+        initCharacterA();
+        initCharacterB();
+        battle(characterA,characterB);
+    }
+    cout<<"------------"<<endl;
+    cout<<characterA->getName()<<" win :"<<AWinCount<<endl;
+    cout<<characterB->getName()<<" win :"<<BWinCount<<endl;
 }
 
 void BattleTestSystem::showCharacterMessage()
@@ -34,48 +44,104 @@ void BattleTestSystem::showCharacterMessage()
 
 void BattleTestSystem::battle(Character *a, Character *b)
 {
-    while(!a->isDead() && !b->isDead())
+    while(true)
     {
         attack(a,b);
+        if(b->isDead())
+        {
+            break;
+        }
         attack(b,a);
+        if(a->isDead())
+        {
+            break;
+        }
     }
-    cout<<"battle end"<<endl;
+    if(showMessage)
+    {
+        cout<<"battle end"<<endl;
+    }
+
     if(a->isDead())
     {
-        cout<<a->getName()<<" is dead"<<endl;
+        if(showMessage)
+        {
+            cout<<a->getName()<<" is dead"<<endl;
+            cout<<b->getName()<<" remain HP:"<<b->getHP()<<endl;
+        }
+
+        BWinCount++;
     }
     else if(b->isDead())
     {
-        cout<<b->getName()<<" is dead"<<endl;
+        if(showMessage)
+        {
+            cout<<b->getName()<<" is dead"<<endl;
+            cout<<a->getName()<<" remain HP"<<a->getHP()<<endl;
+        }
 
+        AWinCount++;
     }
+    //getchar();
 }
 
 void BattleTestSystem::attack(Character *a, Character *b)
 {
     combo=0;
-    cout<<"#"<<a->getName()<<" attack "<<b->getName()<<endl;
-
-    if(isEvade(a,b))
+    if(showMessage)
     {
-        cout<<"evade"<<endl;
-        return;
+        cout<<"#"<<a->getName()<<" attack "<<b->getName()<<endl;
     }
 
-    int attackCount=0;
-    if(isCritical(a))
-    {
-        cout<<"critical attack"<<endl;
-        attackCount=getCriticalAttackCount(a);
-    }
-    else
-    {
-        attackCount=getAttackCount(a);
-    }
-    cout<<a->getName()<<" attack count:"<<attackCount<<endl;
-    sufferAttack(b,attackCount);
 
-    getchar();
+
+    do
+    {
+        if(isEvade(a,b))
+        {
+            if(showMessage)
+            {
+                cout<<"evade"<<endl;
+            }
+
+            break;
+        }
+        int attackCount=0;
+        if(isCritical(a))
+        {
+            if(showMessage)
+            {
+                cout<<"critical attack"<<endl;
+            }
+
+            attackCount=getCriticalAttackCount(a);
+        }
+        else
+        {
+            attackCount=getAttackCount(a);
+        }
+        if(showMessage)
+        {
+            cout<<a->getName()<<" attack count:"<<attackCount<<endl;
+        }
+
+        sufferAttack(b,attackCount);
+
+        if(!isCombo(a))
+        {
+            break;
+        }
+        else
+        {
+            if(showMessage)
+            {
+                cout<<"combo!"<<endl;
+            }
+
+            combo++;
+        }
+    }while(true);
+    //getchar();
 }
 
 void BattleTestSystem::sufferAttack(Character *c, int attackCount)
@@ -89,15 +155,24 @@ void BattleTestSystem::sufferAttack(Character *c, int attackCount)
     }
     if(isBlock(c))
     {
-        cout<<"block"<<endl;
+        if(showMessage)
+        {
+            cout<<"block"<<endl;
+        }
+
         blockCount=getBlockCount(c);
     }
 
     attackCount=attackCount-armorCount-blockCount;
     attackCount=attackCount>=1?attackCount:1;
-    cout<<c->getName()<<" suffer damage:"<<attackCount<<endl;
     c->sufferDamage(attackCount);
-    cout<<c->getName()<<" remain HP:"<<c->getHP()<<endl;
+    if(showMessage)
+    {
+        cout<<c->getName()<<" suffer damage:"<<attackCount<<endl;
+        cout<<c->getName()<<" remain HP:"<<c->getHP()<<endl;
+    }
+
+
 }
 
 int BattleTestSystem::getAttackCount(Character *a)
@@ -185,7 +260,11 @@ bool BattleTestSystem::isEvade(Character *a, Character *b)
     temp=temp*k3+5;
     temp=temp>95?95:temp;
 
-    cout<<b->getName()<<" evade chance:"<<temp<<endl;
+    if(showMessage)
+    {
+        cout<<b->getName()<<" evade chance:"<<temp<<endl;
+    }
+
 
     return roll(temp);
 }
@@ -199,7 +278,11 @@ bool BattleTestSystem::isCritical(Character *c)
 
     double criPro=agi*k1+criProAdd+5;
 
-    cout<<c->getName()<<" critical chance: "<<criPro<<endl;
+    if(showMessage)
+    {
+        cout<<c->getName()<<" critical chance: "<<criPro<<endl;
+    }
+
 
     return roll(criPro);
 }
@@ -212,9 +295,32 @@ bool BattleTestSystem::isBlock(Character *c)
 
     double blockPro=agi*k1+blockProAdd+5;
 
-    cout<<c->getName()<<" block chance: "<<blockPro<<endl;
+    if(showMessage)
+    {
+        cout<<c->getName()<<" block chance: "<<blockPro<<endl;
+    }
+
 
     return roll(blockPro);
+}
+
+bool BattleTestSystem::isCombo(Character *c)
+{
+    double k1=0.1;
+    double k2=5;
+    double agility=c->getAgility();
+    double comboProAdd=getComboProAdd(c);
+
+    double comboPro=agility*k1+comboProAdd+5;
+    comboPro=comboPro-k2*combo;
+    comboPro=comboPro<0?0:comboPro;
+
+    if(showMessage)
+    {
+        cout<<c->getName()<<" combo chance:"<<comboPro<<endl;
+    }
+
+    return roll(comboPro);
 }
 
 void BattleTestSystem::initCharacterA()
@@ -233,10 +339,9 @@ void BattleTestSystem::initCharacterA()
     sword->setWeaponDamage(10);
     characterA->setLeftHand(sword);
 
-    Weapon* shield=new Weapon();
-    shield->setBlockAdd(5);
-    shield->setBlockProAdd(10);
-    characterA->setRightHand(shield);
+    Weapon* spear=new Weapon();
+    spear->setWeaponDamage(10);
+    characterA->setRightHand(spear);
 
     Armor* armor=new Armor();
     armor->setArmorCount(5);
@@ -260,8 +365,8 @@ void BattleTestSystem::initCharacterB()
     characterB->setLeftHand(sword);
 
     Weapon* shield=new Weapon();
-    shield->setBlockAdd(5);
-    shield->setBlockProAdd(10);
+    shield->setBlockAdd(20);
+    shield->setBlockProAdd(60);
     characterB->setRightHand(shield);
 
     Armor* armor=new Armor();
@@ -278,7 +383,11 @@ bool BattleTestSystem::roll(double m)
 {
     double rand=getRandom(0,100);
 
-    cout<<"roll:"<<rand<<endl;
+    if(showMessage)
+    {
+        cout<<"roll:"<<rand<<endl;
+    }
+
     if(rand<m)
     {
         return true;

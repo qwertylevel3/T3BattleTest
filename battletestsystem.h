@@ -11,6 +11,7 @@ public:
     void init();
     void test();
 protected:
+    bool showMessage;
     void showCharacterMessage();
     void battle(Character* a,Character* b);
 
@@ -25,8 +26,7 @@ protected:
     bool isEvade(Character* a,Character* b);
     bool isCritical(Character* c);
     bool isBlock(Character* c);
-
-
+    bool isCombo(Character* c);
 
     void initCharacterA();
     void initCharacterB();
@@ -47,6 +47,8 @@ protected:
 
     int combo;
 
+    int AWinCount;
+    int BWinCount;
 };
 
 #endif // BATTLETESTSYSTEM_H
